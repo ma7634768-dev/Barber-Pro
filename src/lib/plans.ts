@@ -34,7 +34,7 @@ export const PLANS: Plan[] = [
   },
   {
     id: "business",
-    checkoutUrl: "",
+    checkoutUrl: "https://pay.kiwify.com.br/Maz8B2y",
     name: "Business",
     tagline: "Para redes de barbearias",
     price: 129,
