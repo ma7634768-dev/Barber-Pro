@@ -1,5 +1,6 @@
 // Barber Pro: recebe os avisos da Kiwify e ativa/renova/cancela o plano da barbearia.
-// Secrets necessários no Supabase: KIWIFY_TOKEN (o "token" do webhook na Kiwify).
+// Secrets necessários no Supabase: KIWIFY_TOKEN (o "token" do webhook na Kiwify;
+// se houver um webhook por produto, os tokens separados por vírgula).
 // SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já existem em toda Edge Function.
 // Publicar com "Verify JWT" DESLIGADO (a Kiwify não manda login do Supabase).
 
@@ -7,7 +8,7 @@ const PRICES: Record<string, number> = { basico: 39, pro: 70, business: 129 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const KIWIFY_TOKEN = Deno.env.get("KIWIFY_TOKEN") ?? "";
+const KIWIFY_TOKENS = (Deno.env.get("KIWIFY_TOKEN") ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 
 const db = (path: string, init: RequestInit = {}) =>
   fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -65,7 +66,8 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
 
   const signature = url.searchParams.get("signature") ?? "";
-  if (!KIWIFY_TOKEN || signature !== (await hmacSha1Hex(KIWIFY_TOKEN, raw))) {
+  const valid = (await Promise.all(KIWIFY_TOKENS.map((t) => hmacSha1Hex(t, raw)))).includes(signature);
+  if (!signature || !valid) {
     return new Response("assinatura inválida", { status: 401 });
   }
 
