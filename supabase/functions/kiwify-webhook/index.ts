@@ -21,7 +21,7 @@ async function hmacSha1Hex(key: string, message: string) {
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-const normalize = (s: unknown) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const normalize = (s: unknown) => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 function planFrom(body: any) {
   const name = normalize([body.Product?.product_name, body.Subscription?.plan?.name].join(" "));
