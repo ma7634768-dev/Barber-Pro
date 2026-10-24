@@ -15,7 +15,7 @@ export type Plan = {
 export const PLANS: Plan[] = [
   {
     id: "basico",
-    checkoutUrl: "",
+    checkoutUrl: "https://pay.kiwify.com.br/V6u2PKg",
     name: "Básico",
     tagline: "Ideal para barbearias iniciantes",
     price: 39,
