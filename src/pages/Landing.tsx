@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { Button, Card, cn } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { PLANS } from "@/lib/plans";
+import { PaymentMethods } from "@/components/PaymentMethods";
 
 const FEATURES = [
   { icon: CalendarDays, title: "Agenda Inteligente", text: "Gerencie todos os agendamentos em uma agenda visual e intuitiva, separada por barbeiro." },
@@ -163,6 +164,10 @@ export default function Landing() {
               </Link>
             </Card>
           ))}
+        </div>
+        <div className="mt-10 flex flex-col items-center gap-3 text-center">
+          <p className="text-sm text-muted-foreground">Formas de pagamento</p>
+          <PaymentMethods className="justify-center" />
         </div>
       </section>
 

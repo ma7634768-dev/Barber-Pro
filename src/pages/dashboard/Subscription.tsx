@@ -5,6 +5,7 @@ import { Button, Card, EmptyState, PageHeader, cn } from "@/components/ui";
 import { useShopTable } from "@/lib/useShopTable";
 import { brl } from "@/lib/format";
 import { PLANS } from "@/lib/plans";
+import { PaymentMethods } from "@/components/PaymentMethods";
 import { useShopAppointments } from "@/lib/stats";
 import type { Barber, Client } from "@/lib/types";
 
@@ -88,6 +89,14 @@ export default function Subscription() {
           </Card>
         ))}
       </div>
+
+      <Card className="mt-6 flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-lg font-bold">Formas de pagamento</h2>
+          <p className="text-sm text-muted-foreground">No cartão a cobrança é automática todo mês. No Pix e no boleto chega uma cobrança nova a cada mês.</p>
+        </div>
+        <PaymentMethods />
+      </Card>
 
       <h2 className="mb-4 mt-10 text-xl font-bold">Histórico de Faturas</h2>
       <EmptyState
