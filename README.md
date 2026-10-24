@@ -8,7 +8,7 @@ Feito com React + Vite + TypeScript + Tailwind, e Supabase (banco, login e atual
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
 2. No Supabase, abra **SQL Editor**, cole o conteúdo de `supabase/migrations/20261024000000_init.sql` e rode.
-3. Copie `.env.example` para `.env` e preencha com a URL e a chave `anon` do projeto (Supabase → Project Settings → API).
+3. O projeto já vem ligado ao Supabase do Barber Pro pelo arquivo `.env.production` (a chave publishable é pública por natureza). Para usar outro projeto, copie `.env.example` para `.env.local` e preencha.
 4. Rode:
 
 ```bash
