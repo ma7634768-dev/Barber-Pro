@@ -91,7 +91,7 @@ export function DashboardLayout() {
           </div>
         </header>
         {open && (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)}>
+          <div className="fixed inset-0 z-50 bg-black/70 lg:hidden" onClick={() => setOpen(false)}>
             <aside className="relative h-full w-72 bg-card" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setOpen(false)} className="absolute right-3 top-4 rounded-md p-2 hover:bg-muted" aria-label="Fechar menu">
                 <X className="h-5 w-5" />

@@ -53,7 +53,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("rounded-2xl border border-border bg-card shadow-sm", className)}>{children}</div>;
+  return <div className={cn("rounded-2xl border border-border bg-card", className)}>{children}</div>;
 }
 
 export function Badge({ className, children }: { className?: string; children: ReactNode }) {
@@ -69,7 +69,7 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
