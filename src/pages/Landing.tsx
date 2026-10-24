@@ -4,6 +4,7 @@ import { ArrowRight, Bell, CalendarDays, CheckCircle2, Clock, Scissors, Shopping
 import { Logo } from "@/components/Logo";
 import { Button, Card, cn } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import { PLANS } from "@/lib/plans";
 
 const FEATURES = [
   { icon: CalendarDays, title: "Agenda Inteligente", text: "Gerencie todos os agendamentos em uma agenda visual e intuitiva, separada por barbeiro." },
@@ -12,28 +13,6 @@ const FEATURES = [
   { icon: Clock, title: "Evite Conflitos", text: "Sistema que impede agendamentos sobrepostos automaticamente." },
   { icon: ShoppingBag, title: "Produtos e Estoque", text: "Mostre pomadas, óleos e shampoos na sua página e controle o estoque." },
   { icon: Bell, title: "Notificações na Hora", text: "Receba um aviso no celular a cada novo agendamento feito pelo link." },
-];
-
-const PLANS = [
-  {
-    name: "Básico",
-    tagline: "Ideal para barbearias iniciantes",
-    price: 49,
-    features: ["Até 2 barbeiros", "Agendamentos ilimitados", "Página de agendamento", "Gestão de clientes", "Suporte por email"],
-  },
-  {
-    name: "Pro",
-    tagline: "Para barbearias em crescimento",
-    price: 99,
-    popular: true,
-    features: ["Até 5 barbeiros", "Tudo do plano Básico", "Produtos e estoque", "Notificações em tempo real", "Suporte prioritário"],
-  },
-  {
-    name: "Business",
-    tagline: "Para redes de barbearias",
-    price: 199,
-    features: ["Barbeiros ilimitados", "Tudo do plano Pro", "Gestão de equipe", "Suporte 24/7", "Customização de marca"],
-  },
 ];
 
 const PREVIEW = [

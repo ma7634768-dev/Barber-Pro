@@ -18,6 +18,7 @@ export interface Barber {
   id: string;
   barbershop_id: string;
   name: string;
+  specialty: string | null;
   email: string | null;
   phone: string | null;
   avatar_url: string | null;

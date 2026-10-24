@@ -18,6 +18,13 @@ export const STATUS_LABEL: Record<AppointmentStatus, string> = {
   cancelled: "Cancelado",
 };
 
+export const STATUS_STYLE: Record<AppointmentStatus, string> = {
+  scheduled: "bg-primary/15 text-primary",
+  confirmed: "bg-success/15 text-success",
+  completed: "bg-muted text-muted-foreground",
+  cancelled: "bg-destructive/15 text-destructive",
+};
+
 export const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export function errorMessage(error: unknown) {

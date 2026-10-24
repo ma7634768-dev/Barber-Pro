@@ -118,3 +118,76 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
     </div>
   );
 }
+
+const TONES = {
+  primary: "bg-primary/10 text-primary",
+  success: "bg-success/10 text-success",
+  amber: "bg-amber-500/10 text-amber-400",
+  muted: "bg-muted text-muted-foreground",
+};
+
+export function StatCard({ icon, value, label, tone = "primary", trend }: {
+  icon: ReactNode;
+  value: ReactNode;
+  label: string;
+  tone?: keyof typeof TONES;
+  /** Variação em % contra o período anterior */
+  trend?: number | null;
+}) {
+  return (
+    <Card className="flex items-center gap-4 p-5">
+      <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl", TONES[tone])}>{icon}</div>
+      <div className="min-w-0">
+        <p className="text-xl font-bold leading-tight">{value}</p>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        {trend !== undefined && trend !== null && (
+          <p className={cn("mt-0.5 text-xs font-medium", trend >= 0 ? "text-success" : "text-destructive")}>
+            {trend >= 0 ? "↗" : "↘"} {trend >= 0 ? "+" : ""}{trend}% <span className="font-normal text-muted-foreground">vs anterior</span>
+          </p>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+export function Pills<T extends string>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          onClick={() => onChange(o.value)}
+          className={cn(
+            "rounded-full border px-4 py-1.5 text-sm font-medium transition",
+            value === o.value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/60",
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn("relative h-6 w-11 shrink-0 rounded-full transition", checked ? "bg-primary" : "bg-muted")}
+    >
+      <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", checked ? "left-[22px]" : "left-0.5")} />
+    </button>
+  );
+}
+
+export const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");

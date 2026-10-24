@@ -49,3 +49,11 @@ export function freeSlots(
   }
   return slots;
 }
+
+/** Os 7 dias (0 = domingo) com o horário que vale para o barbeiro, ou null se folga. */
+export function weekSchedule(shop: WeekHours, barber?: WeekHours) {
+  return Array.from({ length: 7 }, (_, i) => {
+    const h = (barber && barber[String(i)]) || shop[String(i)];
+    return h && !h.closed && h.open && h.close ? h : null;
+  });
+}

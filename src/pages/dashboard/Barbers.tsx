@@ -1,20 +1,26 @@
 import { useState, type FormEvent } from "react";
-import { Pencil, Plus, Trash2, UserSquare2 } from "lucide-react";
+import { startOfMonth } from "date-fns";
+import { Clock, DollarSign, Pencil, Plus, Scissors, Trash2, Users, UserSquare2 } from "lucide-react";
 import { toast } from "sonner";
 import { HoursEditor } from "@/components/HoursEditor";
-import { Badge, Button, Card, EmptyState, Field, Input, Modal, PageHeader, Spinner } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Modal, PageHeader, Spinner, StatCard, Toggle, cn, initials } from "@/components/ui";
 import { useBarbershop } from "@/lib/barbershop";
 import { supabase } from "@/lib/supabase";
 import { useShopTable } from "@/lib/useShopTable";
-import { errorMessage } from "@/lib/format";
+import { brl, errorMessage } from "@/lib/format";
+import { weekSchedule } from "@/lib/schedule";
+import { isServed, priceOf, useShopAppointments } from "@/lib/stats";
 import type { Barber } from "@/lib/types";
 
-type Form = Pick<Barber, "name" | "email" | "phone" | "avatar_url" | "working_hours" | "is_active">;
-const EMPTY: Form = { name: "", email: "", phone: "", avatar_url: "", working_hours: {}, is_active: true };
+type Form = Pick<Barber, "name" | "specialty" | "email" | "phone" | "avatar_url" | "working_hours" | "is_active">;
+const EMPTY: Form = { name: "", specialty: "", email: "", phone: "", avatar_url: "", working_hours: {}, is_active: true };
+const DAY_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default function Barbers() {
   const { shop } = useBarbershop();
   const { rows, loading, reload } = useShopTable<Barber>("barbers");
+  const [monthStart] = useState(() => startOfMonth(new Date()));
+  const { rows: month } = useShopAppointments(monthStart, null);
   const [editing, setEditing] = useState<Barber | "new" | null>(null);
   const [form, setForm] = useState<Form>(EMPTY);
   const [ownHours, setOwnHours] = useState(false);
@@ -30,7 +36,7 @@ export default function Barbers() {
   const save = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const payload = { ...form, working_hours: ownHours ? form.working_hours : {}, barbershop_id: shop!.id };
+    const payload = { ...form, specialty: form.specialty?.trim() || null, working_hours: ownHours ? form.working_hours : {}, barbershop_id: shop!.id };
     const { error } =
       editing === "new"
         ? await supabase.from("barbers").insert(payload)
@@ -42,6 +48,13 @@ export default function Barbers() {
     reload();
   };
 
+  const toggleActive = async (b: Barber, is_active: boolean) => {
+    const { error } = await supabase.from("barbers").update({ is_active }).eq("id", b.id);
+    if (error) return toast.error(errorMessage(error));
+    toast.success(is_active ? `${b.name} voltou para a agenda.` : `${b.name} saiu da página de agendamento.`);
+    reload();
+  };
+
   const remove = async (b: Barber) => {
     if (!window.confirm(`Excluir ${b.name}? Os agendamentos dele também serão apagados. Para só tirar da agenda, desative em vez de excluir.`)) return;
     const { error } = await supabase.from("barbers").delete().eq("id", b.id);
@@ -49,41 +62,105 @@ export default function Barbers() {
     reload();
   };
 
+  // Atendimentos deste mês (não cancelados e que já aconteceram)
+  const served = month.filter((a) => isServed(a));
+  const perBarber = new Map<string, { count: number; revenue: number }>();
+  for (const a of served) {
+    const s = perBarber.get(a.barber_id) ?? { count: 0, revenue: 0 };
+    s.count += 1;
+    s.revenue += priceOf(a);
+    perBarber.set(a.barber_id, s);
+  }
+  const monthRevenue = served.reduce((s, a) => s + priceOf(a), 0);
+
   return (
     <div>
-      <PageHeader title="Barbeiros" subtitle="Quem atende na sua barbearia." action={<Button onClick={() => open("new")}><Plus className="h-4 w-4" />Novo barbeiro</Button>} />
+      <PageHeader title="Barbeiros" subtitle="Gerencie sua equipe de profissionais." action={<Button onClick={() => open("new")}><Plus className="h-4 w-4" />Novo barbeiro</Button>} />
       {loading ? (
         <Spinner />
-      ) : rows.length === 0 ? (
-        <EmptyState icon={<UserSquare2 className="h-6 w-6" />} title="Nenhum barbeiro ainda" text="Cadastre sua equipe para os clientes escolherem com quem cortar." action={<Button onClick={() => open("new")}>Adicionar barbeiro</Button>} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {rows.map((b) => (
-            <Card key={b.id} className="flex items-center gap-4 p-5">
-              {b.avatar_url ? (
-                <img src={b.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 font-display text-xl font-bold text-primary">
-                  {b.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{b.name}</p>
-                <p className="truncate text-sm text-muted-foreground">{b.phone || b.email || "Sem contato"}</p>
-                {!b.is_active && <Badge className="mt-1 bg-muted text-muted-foreground">Inativo</Badge>}
-              </div>
-              <div className="flex gap-1">
-                <Button size="sm" variant="ghost" onClick={() => open(b)} aria-label="Editar"><Pencil className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => remove(b)} aria-label="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <>
+          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+            <StatCard icon={<Users className="h-6 w-6" />} value={rows.length} label="Total de Barbeiros" />
+            <StatCard icon={<Scissors className="h-6 w-6" />} tone="success" value={served.length} label="Atendimentos este mês" />
+            <StatCard icon={<DollarSign className="h-6 w-6" />} tone="amber" value={brl(monthRevenue)} label="Faturamento este mês" />
+          </div>
+          {rows.length === 0 ? (
+            <EmptyState icon={<UserSquare2 className="h-6 w-6" />} title="Nenhum barbeiro ainda" text="Cadastre sua equipe para os clientes escolherem com quem cortar." action={<Button onClick={() => open("new")}>Adicionar barbeiro</Button>} />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {rows.map((b) => {
+                const week = weekSchedule(shop!.opening_hours, b.working_hours);
+                const firstOpen = week.find(Boolean);
+                const stats = perBarber.get(b.id) ?? { count: 0, revenue: 0 };
+                return (
+                  <Card key={b.id} className={cn("p-5", !b.is_active && "opacity-70")}>
+                    <div className="flex items-start gap-4">
+                      {b.avatar_url ? (
+                        <img src={b.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+                          {initials(b.name)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-lg font-semibold">{b.name}</p>
+                        <p className="truncate text-sm text-muted-foreground">{b.specialty || "Barbeiro"}</p>
+                      </div>
+                      <div className="flex">
+                        <Button size="sm" variant="ghost" onClick={() => open(b)} aria-label="Editar"><Pencil className="h-4 w-4" /></Button>
+                        <Button size="sm" variant="ghost" onClick={() => remove(b)} aria-label="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 space-y-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Status</span>
+                        <div className="flex items-center gap-2">
+                          <Badge className={b.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}>{b.is_active ? "Ativo" : "Inativo"}</Badge>
+                          <Toggle checked={b.is_active} onChange={(v) => toggleActive(b, v)} label={`Ativar ${b.name}`} />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Horário</span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          {firstOpen ? `${firstOpen.open} - ${firstOpen.close}` : "Sem horário"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="mt-4 text-sm text-muted-foreground">Dias de trabalho</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {week.map((h, i) =>
+                        h ? (
+                          <span key={i} className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium" title={`${h.open} - ${h.close}`}>{DAY_SHORT[i]}</span>
+                        ) : null,
+                      )}
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4 text-center">
+                      <div>
+                        <p className="text-xl font-bold text-primary">{stats.count}</p>
+                        <p className="text-xs text-muted-foreground">Atendimentos</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-success">{brl(stats.revenue)}</p>
+                        <p className="text-xs text-muted-foreground">Este mês</p>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "Novo barbeiro" : "Editar barbeiro"}>
         <form onSubmit={save} className="space-y-4">
           <Field label="Nome"><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Especialidade"><Input value={form.specialty ?? ""} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Ex.: Degradê & Fade" /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Telefone"><Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             <Field label="E-mail"><Input type="email" value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>

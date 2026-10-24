@@ -17,6 +17,9 @@ import Services from "./pages/dashboard/Services";
 import Clients from "./pages/dashboard/Clients";
 import Settings from "./pages/dashboard/Settings";
 import Products from "./pages/dashboard/Products";
+import Appointments from "./pages/dashboard/Appointments";
+import Reports from "./pages/dashboard/Reports";
+import Subscription from "./pages/dashboard/Subscription";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -42,10 +45,13 @@ export default function App() {
         <Route path="/painel" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route index element={<Overview />} />
           <Route path="agenda" element={<Agenda />} />
+          <Route path="agendamentos" element={<Appointments />} />
           <Route path="barbeiros" element={<Barbers />} />
           <Route path="servicos" element={<Services />} />
           <Route path="produtos" element={<Products />} />
           <Route path="clientes" element={<Clients />} />
+          <Route path="relatorios" element={<Reports />} />
+          <Route path="assinatura" element={<Subscription />} />
           <Route path="configuracoes" element={<Settings />} />
         </Route>
         <Route path="*" element={<NotFound />} />

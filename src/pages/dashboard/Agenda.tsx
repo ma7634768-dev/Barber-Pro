@@ -7,15 +7,8 @@ import { useBarbershop } from "@/lib/barbershop";
 import { supabase } from "@/lib/supabase";
 import { useShopTable } from "@/lib/useShopTable";
 import { dayBounds, freeSlots, hoursFor } from "@/lib/schedule";
-import { brl, errorMessage, fmt, STATUS_LABEL } from "@/lib/format";
+import { brl, errorMessage, fmt, STATUS_LABEL, STATUS_STYLE } from "@/lib/format";
 import type { Appointment, AppointmentStatus, Barber, Service } from "@/lib/types";
-
-const STATUS_STYLE: Record<AppointmentStatus, string> = {
-  scheduled: "bg-primary/15 text-primary",
-  confirmed: "bg-success/15 text-success",
-  completed: "bg-muted text-muted-foreground",
-  cancelled: "bg-destructive/15 text-destructive",
-};
 
 export default function Agenda() {
   const { shop } = useBarbershop();

@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { subDays } from "date-fns";
-import { CalendarClock, History, Pencil, Plus, Search, Trash2, Users } from "lucide-react";
+import { CalendarClock, DollarSign, History, Pencil, Plus, Search, Trash2, TrendingUp, Users } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Card, EmptyState, Field, Input, Modal, PageHeader, Spinner, Textarea } from "@/components/ui";
+import { Button, Card, EmptyState, Field, Input, Modal, PageHeader, Spinner, StatCard, Textarea, initials } from "@/components/ui";
 import { useBarbershop } from "@/lib/barbershop";
 import { supabase } from "@/lib/supabase";
 import { useShopTable } from "@/lib/useShopTable";
-import { errorMessage, fmt } from "@/lib/format";
+import { brl, errorMessage, fmt } from "@/lib/format";
 import type { Appointment, Client } from "@/lib/types";
 
-type Visit = Pick<Appointment, "client_id" | "client_phone" | "start_time" | "status">;
-type Summary = { next?: string; last?: string; visits: number };
+type Visit = Pick<Appointment, "client_id" | "client_phone" | "start_time" | "status"> & { services: { price: number } | null };
+type Summary = { next?: string; last?: string; visits: number; spent: number };
 
 type Form = Pick<Client, "name" | "email" | "phone" | "notes">;
 const EMPTY: Form = { name: "", email: "", phone: "", notes: "" };
@@ -57,12 +57,12 @@ export default function Clients() {
     if (!shop) return;
     supabase
       .from("appointments")
-      .select("client_id, client_phone, start_time, status")
+      .select("client_id, client_phone, start_time, status, services(price)")
       .eq("barbershop_id", shop.id)
       .neq("status", "cancelled")
       .gte("start_time", subDays(new Date(), 365).toISOString())
       .order("start_time")
-      .then(({ data }) => setVisits((data ?? []) as Visit[]));
+      .then(({ data }) => setVisits((data ?? []) as unknown as Visit[]));
   }, [shop]);
 
   // Próximo horário e última visita de cada cliente (pelo cadastro ou, se faltar, pelo telefone)
@@ -72,16 +72,17 @@ export default function Clients() {
     for (const v of visits) {
       for (const key of [v.client_id, v.client_phone && `tel:${v.client_phone}`]) {
         if (!key) continue;
-        const s = byKey.get(key) ?? { visits: 0 };
+        const s = byKey.get(key) ?? { visits: 0, spent: 0 };
         if (v.start_time > now) s.next ??= v.start_time;
         else {
           s.last = v.start_time;
           s.visits += 1;
+          s.spent += Number(v.services?.price ?? 0);
         }
         byKey.set(key, s);
       }
     }
-    return new Map(rows.map((c) => [c.id, byKey.get(c.id) ?? (c.phone ? byKey.get(`tel:${c.phone}`) : undefined) ?? { visits: 0 }]));
+    return new Map(rows.map((c) => [c.id, byKey.get(c.id) ?? (c.phone ? byKey.get(`tel:${c.phone}`) : undefined) ?? { visits: 0, spent: 0 }]));
   }, [visits, rows]);
 
   const q = query.trim().toLowerCase();
@@ -92,6 +93,7 @@ export default function Clients() {
       .sort((a, b) => summaries.get(a.id)!.next!.localeCompare(summaries.get(b.id)!.next!));
   }
   const upcomingCount = rows.filter((c) => summaries.get(c.id)?.next).length;
+  const totals = [...summaries.values()].reduce((t, s) => ({ visits: t.visits + s.visits, spent: t.spent + s.spent }), { visits: 0, spent: 0 });
 
   return (
     <div>
@@ -102,7 +104,12 @@ export default function Clients() {
         <EmptyState icon={<Users className="h-6 w-6" />} title="Nenhum cliente ainda" text="Os clientes que agendarem pelo seu link aparecem aqui automaticamente." />
       ) : (
         <>
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+            <StatCard icon={<Users className="h-6 w-6" />} value={rows.length} label="Total de Clientes" />
+            <StatCard icon={<TrendingUp className="h-6 w-6" />} tone="success" value={(rows.length ? totals.visits / rows.length : 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} label="Média de Visitas" />
+            <StatCard icon={<DollarSign className="h-6 w-6" />} tone="amber" value={brl(totals.spent)} label="Receita Total (12 meses)" />
+          </div>
+          <Card className="mb-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="pl-9" placeholder="Buscar por nome, telefone ou e-mail" value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -111,11 +118,11 @@ export default function Clients() {
               <Button size="sm" variant={onlyUpcoming ? "outline" : "primary"} onClick={() => setOnlyUpcoming(false)}>Todos</Button>
               <Button size="sm" variant={onlyUpcoming ? "primary" : "outline"} onClick={() => setOnlyUpcoming(true)}>Com horário marcado ({upcomingCount})</Button>
             </div>
-          </div>
+          </Card>
           <Card className="divide-y divide-border">
             {filtered.map((c) => (
               <div key={c.id} className="flex items-center gap-4 px-5 py-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted font-semibold">{c.name.charAt(0).toUpperCase()}</div>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">{initials(c.name)}</div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{c.name}</p>
                   <p className="truncate text-sm text-muted-foreground">{[c.phone, c.email].filter(Boolean).join(" · ") || "Sem contato"}</p>
@@ -160,7 +167,7 @@ function ClientDates({ summary }: { summary?: Summary }) {
       {summary.last && (
         <span className="flex items-center gap-1 text-muted-foreground">
           <History className="h-3.5 w-3.5" />
-          Última visita: {fmt(summary.last, "dd/MM/yy")} · {summary.visits} {summary.visits === 1 ? "visita" : "visitas"}
+          Última visita: {fmt(summary.last, "dd/MM/yy")} · {summary.visits} {summary.visits === 1 ? "visita" : "visitas"} · {brl(summary.spent)}
         </span>
       )}
     </div>

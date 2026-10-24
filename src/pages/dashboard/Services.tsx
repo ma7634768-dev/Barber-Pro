@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Clock, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, DollarSign, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge, Button, Card, EmptyState, Field, Input, Modal, PageHeader, Spinner, Textarea } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Modal, PageHeader, Pills, Spinner, StatCard, Textarea } from "@/components/ui";
 import { useBarbershop } from "@/lib/barbershop";
 import { supabase } from "@/lib/supabase";
 import { useShopTable } from "@/lib/useShopTable";
@@ -10,6 +10,7 @@ import type { Service } from "@/lib/types";
 
 type Form = Pick<Service, "name" | "description" | "duration" | "price" | "category" | "is_active">;
 const EMPTY: Form = { name: "", description: "", duration: 30, price: 0, category: "", is_active: true };
+const BASE_CATEGORIES = ["Cabelo", "Barba", "Combo", "Extras", "Tratamentos"];
 
 export default function Services() {
   const { shop } = useBarbershop();
@@ -17,6 +18,7 @@ export default function Services() {
   const [editing, setEditing] = useState<Service | "new" | null>(null);
   const [form, setForm] = useState<Form>(EMPTY);
   const [busy, setBusy] = useState(false);
+  const [category, setCategory] = useState("all");
 
   const open = (s: Service | "new") => {
     setEditing(s);
@@ -45,19 +47,44 @@ export default function Services() {
     reload();
   };
 
-  const groups = rows.reduce<Record<string, Service[]>>((acc, s) => {
+  const visible = category === "all" ? rows : rows.filter((s) => (s.category || "Outros") === category);
+  const groups = visible.reduce<Record<string, Service[]>>((acc, s) => {
     (acc[s.category || "Outros"] ??= []).push(s);
     return acc;
   }, {});
+
+  const used = rows.map((s) => s.category || "Outros");
+  const categories = [...new Set([...BASE_CATEGORIES, ...used])];
+  const active = rows.filter((s) => s.is_active);
+  const avgPrice = active.length ? active.reduce((sum, s) => sum + Number(s.price), 0) / active.length : 0;
 
   return (
     <div>
       <PageHeader title="Serviços" subtitle="O que você oferece, quanto tempo leva e quanto custa." action={<Button onClick={() => open("new")}><Plus className="h-4 w-4" />Novo serviço</Button>} />
       {loading ? (
         <Spinner />
-      ) : rows.length === 0 ? (
-        <EmptyState icon={<Scissors className="h-6 w-6" />} title="Nenhum serviço ainda" text="Comece pelo básico: corte, barba e o combo." action={<Button onClick={() => open("new")}>Adicionar serviço</Button>} />
       ) : (
+        <>
+        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          <StatCard icon={<Scissors className="h-6 w-6" />} value={rows.length} label="Total de Serviços" />
+          <StatCard icon={<CheckCircle2 className="h-6 w-6" />} tone="success" value={active.length} label="Serviços Ativos" />
+          <StatCard icon={<DollarSign className="h-6 w-6" />} tone="amber" value={brl(avgPrice)} label="Preço Médio" />
+        </div>
+        <div className="mb-6">
+          <Pills
+            value={category}
+            onChange={setCategory}
+            options={[{ value: "all", label: "Todos" }, ...categories.map((c) => ({ value: c, label: c }))]}
+          />
+        </div>
+        {visible.length === 0 ? (
+          <EmptyState
+            icon={<Scissors className="h-6 w-6" />}
+            title={rows.length === 0 ? "Nenhum serviço ainda" : "Nenhum serviço nesta categoria"}
+            text={rows.length === 0 ? "Comece pelo básico: corte, barba e o combo." : "Cadastre um serviço e escolha essa categoria."}
+            action={<Button onClick={() => open("new")}>Adicionar serviço</Button>}
+          />
+        ) : (
         <div className="space-y-8">
           {Object.entries(groups).map(([category, list]) => (
             <section key={category}>
@@ -86,6 +113,8 @@ export default function Services() {
             </section>
           ))}
         </div>
+        )}
+        </>
       )}
 
       <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "Novo serviço" : "Editar serviço"}>
@@ -96,8 +125,8 @@ export default function Services() {
             <Field label="Preço (R$)"><Input type="number" min={0} step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></Field>
             <Field label="Duração (min)"><Input type="number" min={5} step={5} required value={form.duration} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })} /></Field>
           </div>
-          <Field label="Categoria" hint="Ex.: Cabelo, Barba, Combos"><Input value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} list="categories" /></Field>
-          <datalist id="categories">{Object.keys(groups).map((c) => <option key={c} value={c} />)}</datalist>
+          <Field label="Categoria" hint="Ex.: Cabelo, Barba, Combo"><Input value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} list="categories" /></Field>
+          <datalist id="categories">{categories.filter((c) => c !== "Outros").map((c) => <option key={c} value={c} />)}</datalist>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="accent-[hsl(var(--primary))]" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
             Ativo (aparece na página de agendamento)
