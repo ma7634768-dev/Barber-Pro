@@ -75,7 +75,7 @@ export default function Overview() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-sans text-base font-semibold">Agenda de hoje</h2>

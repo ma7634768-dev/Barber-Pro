@@ -7,7 +7,7 @@ Feito com React + Vite + TypeScript + Tailwind, e Supabase (banco, login e atual
 ## Rodar no computador
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
-2. No Supabase, abra **SQL Editor**, cole o conteúdo de `supabase/migrations/20261024000000_init.sql` e rode.
+2. No Supabase, abra **SQL Editor** e rode, nesta ordem, cada arquivo de `supabase/migrations/` (`20261024000000_init.sql`, depois `20261024010000_products.sql`).
 3. O projeto já vem ligado ao Supabase do Barber Pro pelo arquivo `.env.production` (a chave publishable é pública por natureza). Para usar outro projeto, copie `.env.example` para `.env.local` e preencha.
 4. Rode:
 
@@ -27,7 +27,7 @@ O site abre em http://localhost:8080.
 | `/comecar` | Configuração inicial da barbearia (primeiro acesso) |
 | `/painel` | Visão geral do dia |
 | `/painel/agenda` | Agenda por barbeiro, com confirmar, concluir e cancelar |
-| `/painel/barbeiros`, `/painel/servicos`, `/painel/clientes` | Cadastros |
+| `/painel/barbeiros`, `/painel/servicos`, `/painel/produtos`, `/painel/clientes` | Cadastros (clientes mostram próximo horário e última visita) |
 | `/painel/configuracoes` | Dados e horário de funcionamento |
 | `/agendar/:id` | Página pública de agendamento da barbearia |
 
@@ -37,6 +37,10 @@ O site abre em http://localhost:8080.
 - O cliente agenda pela função `book_appointment`, que confere barbeiro, serviço, horário no futuro e cria o cadastro do cliente.
 - O banco recusa dois agendamentos do mesmo barbeiro no mesmo horário.
 - E-mail e telefone dos barbeiros não aparecem na página pública.
+
+## Notificações
+
+Com o painel aberto, cada agendamento novo feito pelo link aparece no sininho, com aviso na tela e som. Tocando em **Ativar avisos**, o aviso também chega como notificação do celular. No iPhone isso só funciona com o site adicionado à Tela de Início (Compartilhar → Adicionar à Tela de Início).
 
 ## Publicar
 

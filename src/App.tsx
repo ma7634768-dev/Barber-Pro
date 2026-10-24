@@ -16,6 +16,7 @@ import Barbers from "./pages/dashboard/Barbers";
 import Services from "./pages/dashboard/Services";
 import Clients from "./pages/dashboard/Clients";
 import Settings from "./pages/dashboard/Settings";
+import Products from "./pages/dashboard/Products";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="agenda" element={<Agenda />} />
           <Route path="barbeiros" element={<Barbers />} />
           <Route path="servicos" element={<Services />} />
+          <Route path="produtos" element={<Products />} />
           <Route path="clientes" element={<Clients />} />
           <Route path="configuracoes" element={<Settings />} />
         </Route>

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
-import { CalendarDays, ExternalLink, LayoutDashboard, LogOut, Menu, Scissors, Settings, Users, UserSquare2, X } from "lucide-react";
+import { CalendarDays, ExternalLink, LayoutDashboard, LogOut, Menu, Scissors, Settings, ShoppingBag, Users, UserSquare2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useBarbershop } from "@/lib/barbershop";
+import { NotificationsProvider } from "@/lib/notifications";
 import { Logo } from "./Logo";
+import { NotificationBell } from "./NotificationBell";
 import { Spinner, cn } from "./ui";
 
 const NAV = [
@@ -11,6 +13,7 @@ const NAV = [
   { to: "/painel/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/painel/barbeiros", label: "Barbeiros", icon: UserSquare2 },
   { to: "/painel/servicos", label: "Serviços", icon: Scissors },
+  { to: "/painel/produtos", label: "Produtos", icon: ShoppingBag },
   { to: "/painel/clientes", label: "Clientes", icon: Users },
   { to: "/painel/configuracoes", label: "Configurações", icon: Settings },
 ];
@@ -31,7 +34,10 @@ export function DashboardLayout() {
   const sidebar = (
     <nav className="flex h-full flex-col gap-1 p-4">
       <div className="mb-6 px-2">
-        <Logo to="/painel" />
+        <div className="flex items-center justify-between">
+          <Logo to="/painel" />
+          <div className="hidden lg:block"><NotificationBell align="left" /></div>
+        </div>
         <p className="mt-3 truncate text-sm text-muted-foreground">{shop.name}</p>
       </div>
       {NAV.map(({ to, label, icon: Icon, end }) => (
@@ -71,29 +77,34 @@ export function DashboardLayout() {
   );
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="sticky top-0 hidden h-screen border-r border-border bg-card lg:block">{sidebar}</aside>
+    <NotificationsProvider shop={shop}>
+      <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
+        <aside className="sticky top-0 hidden h-screen border-r border-border bg-card lg:block">{sidebar}</aside>
 
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
-        <Logo to="/painel" />
-        <button onClick={() => setOpen(true)} className="rounded-md p-2 hover:bg-muted" aria-label="Abrir menu">
-          <Menu className="h-5 w-5" />
-        </button>
-      </header>
-      {open && (
-        <div className="fixed inset-0 z-50 bg-black/70 lg:hidden" onClick={() => setOpen(false)}>
-          <aside className="relative h-full w-72 bg-card" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setOpen(false)} className="absolute right-3 top-4 rounded-md p-2 hover:bg-muted" aria-label="Fechar menu">
-              <X className="h-5 w-5" />
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
+          <Logo to="/painel" />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button onClick={() => setOpen(true)} className="rounded-md p-2 hover:bg-muted" aria-label="Abrir menu">
+              <Menu className="h-5 w-5" />
             </button>
-            {sidebar}
-          </aside>
-        </div>
-      )}
+          </div>
+        </header>
+        {open && (
+          <div className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)}>
+            <aside className="relative h-full w-72 bg-card" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setOpen(false)} className="absolute right-3 top-4 rounded-md p-2 hover:bg-muted" aria-label="Fechar menu">
+                <X className="h-5 w-5" />
+              </button>
+              {sidebar}
+            </aside>
+          </div>
+        )}
 
-      <main className="px-4 py-6 sm:px-8 sm:py-10">
-        <Outlet />
-      </main>
-    </div>
+        <main className="px-4 py-6 sm:px-8 sm:py-10">
+          <Outlet />
+        </main>
+      </div>
+    </NotificationsProvider>
   );
 }

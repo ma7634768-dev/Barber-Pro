@@ -1,0 +1,12 @@
+{
+  "name": "Barber Pro",
+  "short_name": "Barber Pro",
+  "start_url": "/painel",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f7fe8",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

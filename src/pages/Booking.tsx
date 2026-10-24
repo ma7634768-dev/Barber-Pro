@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { addDays, isSameDay, startOfDay } from "date-fns";
-import { ArrowLeft, CalendarCheck, Clock, MapPin, Phone, Scissors } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Clock, MapPin, Package, Phone, Scissors } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Field, Input, Spinner, Textarea, cn } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
@@ -88,7 +88,7 @@ export default function Booking() {
 
   return (
     <div className="min-h-screen pb-16">
-      <header className="relative overflow-hidden border-b border-border">
+      <header className="relative overflow-hidden border-b border-border bg-card">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.2),transparent_70%)]" />
         <div className="container relative flex flex-col items-center py-10 text-center">
           {shop.logo_url ? (
@@ -98,7 +98,7 @@ export default function Booking() {
               <Scissors className="h-8 w-8" />
             </div>
           )}
-          <h1 className="text-3xl font-bold sm:text-4xl">{shop.name}</h1>
+          <h1 className="text-3xl font-extrabold sm:text-4xl">{shop.name}</h1>
           <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
             {shop.address && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{shop.address}</span>}
             {shop.phone && <span className="flex items-center gap-1"><Phone className="h-4 w-4" />{shop.phone}</span>}
@@ -139,7 +139,10 @@ export default function Booking() {
 
             {step === "service" && (
               <div className="space-y-3">
-                <h2 className="text-2xl font-semibold">Escolha o serviço</h2>
+                <div>
+                  <h2 className="text-2xl font-bold">Escolha o serviço</h2>
+                  <p className="mt-1 text-muted-foreground">Selecione o serviço que deseja agendar</p>
+                </div>
                 {page.services.length === 0 && <p className="text-muted-foreground">Nenhum serviço disponível no momento.</p>}
                 {page.services.map((s) => (
                   <button key={s.id} onClick={() => { setServiceId(s.id); setStep("barber"); }} className="w-full text-left">
@@ -153,12 +156,36 @@ export default function Booking() {
                     </Card>
                   </button>
                 ))}
+                {!!page.products?.length && (
+                  <section className="pt-8">
+                    <h2 className="text-2xl font-bold">Produtos da casa</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">À venda na barbearia. Peça no dia do seu horário.</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {page.products.map((p) => (
+                        <Card key={p.id} className={cn("overflow-hidden", !p.in_stock && "opacity-50")}>
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" className="aspect-square w-full object-cover" />
+                          ) : (
+                            <div className="flex aspect-square items-center justify-center bg-muted text-muted-foreground"><Package className="h-8 w-8" /></div>
+                          )}
+                          <div className="p-3">
+                            <p className="text-sm font-semibold leading-tight">{p.name}</p>
+                            <p className="mt-1 text-sm font-semibold text-primary">{p.in_stock ? brl(p.price) : "Esgotado"}</p>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             )}
 
             {step === "barber" && (
               <div className="space-y-3">
-                <h2 className="text-2xl font-semibold">Com quem?</h2>
+                <div>
+                  <h2 className="text-2xl font-bold">Com quem?</h2>
+                  <p className="mt-1 text-muted-foreground">Escolha o profissional que vai te atender</p>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {page.barbers.map((b) => (
                     <button key={b.id} onClick={() => {
@@ -189,7 +216,10 @@ export default function Booking() {
 
             {step === "time" && (
               <div className="space-y-5">
-                <h2 className="text-2xl font-semibold">Escolha o horário</h2>
+                <div>
+                  <h2 className="text-2xl font-bold">Escolha o horário</h2>
+                  <p className="mt-1 text-muted-foreground">Veja os horários livres e toque no que preferir</p>
+                </div>
                 <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
                   {days.map((d) => {
                     const open = barber && hoursFor(d, shop.opening_hours, barber.working_hours);
@@ -231,7 +261,10 @@ export default function Booking() {
 
             {step === "details" && time && (
               <form onSubmit={book} className="space-y-5">
-                <h2 className="text-2xl font-semibold">Confirme seus dados</h2>
+                <div>
+                  <h2 className="text-2xl font-bold">Confirme seus dados</h2>
+                  <p className="mt-1 text-muted-foreground">Só falta isso para garantir seu horário</p>
+                </div>
                 <Card className="p-4 text-sm">
                   <p className="font-semibold">{service?.name} · {service && brl(service.price)}</p>
                   <p className="text-muted-foreground">com {barber?.name} · {fmt(time, "EEEE, d/MM 'às' HH:mm")}</p>

@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 import { useBarbershop } from "./barbershop";
 
 /** Carrega todas as linhas de uma tabela da barbearia atual. */
-export function useShopTable<T>(table: "barbers" | "services" | "clients", orderBy = "name") {
+export function useShopTable<T>(table: "barbers" | "services" | "clients" | "products", orderBy = "name") {
   const { shop } = useBarbershop();
   const [rows, setRows] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);

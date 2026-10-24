@@ -46,6 +46,18 @@ export interface Client {
   created_at: string;
 }
 
+export interface Product {
+  id: string;
+  barbershop_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number | null;
+  image_url: string | null;
+  category: string | null;
+  is_active: boolean;
+}
+
 export interface Appointment {
   id: string;
   barbershop_id: string;
@@ -59,10 +71,13 @@ export interface Appointment {
   end_time: string;
   status: AppointmentStatus;
   notes: string | null;
+  created_at: string;
 }
 
 export interface BookingPage {
   barbershop: Pick<Barbershop, "id" | "name" | "logo_url" | "address" | "phone" | "opening_hours">;
   barbers: Pick<Barber, "id" | "name" | "avatar_url" | "working_hours">[];
   services: Pick<Service, "id" | "name" | "description" | "duration" | "price" | "category">[];
+  /** Ausente enquanto a migration de produtos não tiver sido aplicada. */
+  products?: (Pick<Product, "id" | "name" | "description" | "price" | "image_url" | "category"> & { in_stock: boolean })[];
 }
