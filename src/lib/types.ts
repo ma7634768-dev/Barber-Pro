@@ -47,6 +47,25 @@ export interface Client {
   created_at: string;
 }
 
+export interface Subscription {
+  barbershop_id: string;
+  plan: "basico" | "pro" | "business";
+  status: "active" | "late" | "canceled" | "refunded";
+  current_period_end: string | null;
+  updated_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  kiwify_order_id: string;
+  event: string;
+  plan: string | null;
+  amount: number | null;
+  payment_method: string | null;
+  status: "paid" | "refunded";
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   barbershop_id: string;

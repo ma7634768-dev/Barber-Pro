@@ -1,7 +1,21 @@
-export type Plan = { name: string; tagline: string; price: number; popular?: boolean; maxBarbers: number | null; features: string[] };
+export type PlanId = "basico" | "pro" | "business";
+
+export type Plan = {
+  id: PlanId;
+  /** Link de checkout do produto na Kiwify (vazio = ainda não configurado) */
+  checkoutUrl: string;
+  name: string;
+  tagline: string;
+  price: number;
+  popular?: boolean;
+  maxBarbers: number | null;
+  features: string[];
+};
 
 export const PLANS: Plan[] = [
   {
+    id: "basico",
+    checkoutUrl: "",
     name: "Básico",
     tagline: "Ideal para barbearias iniciantes",
     price: 39,
@@ -9,6 +23,8 @@ export const PLANS: Plan[] = [
     features: ["Até 2 barbeiros", "Agendamentos ilimitados", "Página de agendamento", "Gestão de clientes", "Suporte por email"],
   },
   {
+    id: "pro",
+    checkoutUrl: "",
     name: "Pro",
     tagline: "Para barbearias em crescimento",
     price: 70,
@@ -17,6 +33,8 @@ export const PLANS: Plan[] = [
     features: ["Até 5 barbeiros", "Tudo do plano Básico", "Produtos e estoque", "Notificações em tempo real", "Suporte prioritário"],
   },
   {
+    id: "business",
+    checkoutUrl: "",
     name: "Business",
     tagline: "Para redes de barbearias",
     price: 129,
@@ -24,3 +42,14 @@ export const PLANS: Plan[] = [
     features: ["Barbeiros ilimitados", "Tudo do plano Pro", "Gestão de equipe", "Suporte 24/7", "Customização de marca"],
   },
 ];
+
+export const planById = (id: string | null | undefined) => PLANS.find((p) => p.id === id);
+
+/** Link do checkout com o id da barbearia, para o site saber quem pagou. */
+export const checkoutLink = (plan: Plan, shopId: string, email?: string | null) => {
+  if (!plan.checkoutUrl) return null;
+  const url = new URL(plan.checkoutUrl);
+  url.searchParams.set("sck", shopId);
+  if (email) url.searchParams.set("email", email);
+  return url.toString();
+};
