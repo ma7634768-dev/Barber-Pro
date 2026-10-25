@@ -13,7 +13,13 @@ const KIWIFY_TOKENS = (process.env.KIWIFY_TOKEN ?? "").split(",").map((t) => t.t
 const db = (path, init = {}) =>
   fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json", ...(init.headers ?? {}) },
+    headers: {
+      apikey: SERVICE_KEY,
+      // chave antiga (JWT "service_role") também vai no Authorization; a nova (sb_secret_...) só no apikey
+      ...(SERVICE_KEY.startsWith("eyJ") ? { Authorization: `Bearer ${SERVICE_KEY}` } : {}),
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+    },
   });
 
 async function hmacSha1Hex(key, message) {
